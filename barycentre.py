@@ -1,5 +1,7 @@
 import math
+import pandas as pd
 class TienstasMethod():
+    
     def __init__(self, N_A: float, E_A: float, N_B: float, E_B: float, 
                  N_C: float, E_C: float, dir_PA: float, dir_PB: float, dir_PC: float):
         self.N_A = N_A
@@ -57,9 +59,47 @@ class TienstasMethod():
         angle_b = (bearing_BA - bearing_BC)
         return angle_b
     
+    def get_c(self):
+        bearing_BC = self.get_bearing(self.E_B, self.N_B, self.E_C, self.N_C)
+        bearing_CB = self.get_back_bearing(bearing_BC)
+        bearing_AC = self.get_bearing(self.E_A, self.N_A, self.E_C, self.N_C)
+        bearing_CA = self.get_back_bearing(bearing_AC)
+        angle_c = (bearing_CB - bearing_CA)
+        return angle_c 
+    
+    def get_k(self, angle_one, angle_two):
+        self.angle_one = angle_one
+        self.angle_two = angle_two
+        cot_angle_one = 1/(math.tan(math.radians(self.angle_one)))
+        cot_angle_two = 1/(math.tan(math.radians(self.angle_two)))
+        k = 1/(cot_angle_one - cot_angle_two)
+        return k
+    
+    def get_easting_p(self):
+        k_1 = self.get_k(self.get_a(), self.get_y())
+        k_2 = self.get_k(self.get_b(), self.get_z())
+        k_3 = self.get_k(self.get_c(), self.get_x())
+        numerator = (self.E_A*k_1) + (self.E_B*k_2) + (self.E_C*k_3)
+        denominator = (k_1 + k_2 + k_3)
+        easting = numerator/denominator
+        return easting
+    
+    def get_northing_p(self):
+        k_1 = self.get_k(self.get_a(), self.get_y())
+        k_2 = self.get_k(self.get_b(), self.get_z())
+        k_3 = self.get_k(self.get_c(), self.get_x())
+        numerator = (self.N_A*k_1) + (self.N_B*k_2) + (self.N_C*k_3)
+        denominator = (k_1 + k_2 + k_3)
+        northing = numerator/denominator
+        return northing
+    def output_data(self):
+        dict = {
+            'NORTHING': [self.get_northing_p()],
+            'EASTING': [self.get_easting_p()]
+        }
+        dataframe = pd.DataFrame(dict)
+        print(dataframe)
+        
+        
 tm = TienstasMethod(8609.71, 3613.52, 3487.16, 7444.39, 1712.06, 1693.38, 0.00, 112.5805556, 245.7225)
-print(f"angle x = {tm.get_x()}")
-print(f"angle y = {tm.get_y()}")
-print(f"angle z = {tm.get_z()}")
-print(f"angle a = {tm.get_a()}")
-print(f"angle b = {tm.get_b()}")
+tm.output_data()
